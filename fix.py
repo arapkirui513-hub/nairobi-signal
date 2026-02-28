@@ -1,0 +1,8 @@
+f=open("ingestion/fetch_feeds.py","r")
+c=f.read()
+f.close()
+c=c.replace("if name == \"main\":","if _name_ == \"_main_\":")
+f=open("ingestion/fetch_feeds.py","w")
+f.write(c)
+f.close()
+print("Done")
