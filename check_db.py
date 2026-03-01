@@ -2,13 +2,18 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client
 
+# Why: We need a clear, un-biased count of our data density
 load_dotenv()
-supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
-res = supabase.table("articles").select("id", count="exact").execute()
-count = res.count if hasattr(res, 'count') else len(res.data)
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
 
-print("-" * 30)
-print(f"🚀 SUCCESS: NairobiSignal DB")
-print(f"Total Articles Stored: {count}")
-print("-" * 30)
+if not url or not key:
+    print("Error: SUPABASE_URL or SUPABASE_KEY not found in .env")
+else:
+    supabase = create_client(url, key)
+    # Perform an exact count query
+    res = supabase.table("articles").select("id", count="exact").execute()
+    print("\n--- DATABASE AUDIT ---")
+    print(f"📈 Total Articles: {res.count}")
+    print("----------------------\n")

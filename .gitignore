@@ -205,3 +205,11 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+# --- Playwright & Automation Specifics ---
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+# Avoid committing the heavy browser binaries (can be GBs in size)
+~/.cache/ms-playwright/
+ms-playwright/
