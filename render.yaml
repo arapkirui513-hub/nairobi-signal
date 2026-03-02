@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: nairobi-signal-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # We use Gunicorn with Uvicorn workers for production stability
+    startCommand: gunicorn api.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    envVars:
+      - key: SUPABASE_URL
+        sync: false # You will set this in the Render Dashboard
+      - key: SUPABASE_KEY
+        sync: false
