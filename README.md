@@ -1,50 +1,51 @@
-# 🚀 NairobiSignal
-**Automated Tech & Investment Intelligence for the Silicon Savannah.**
+# 🇰🇪 NairobiSignal
+**Live Economic Intelligence for the Kenyan Tech Ecosystem.**
 
-NairobiSignal is a production-grade "Reflective Instrument" designed to capture, score, and disseminate high-stakes technical and financial shifts within the Kenyan ecosystem. It moves beyond simple news aggregation by applying a deterministic **Intelligence Lens** to raw data.
+NairobiSignal is a proprietary intelligence terminal that captures, scores, and visualizes the movement of capital and policy in Nairobi in real-time.
+## 🏗️ System Architecture
 
----
+The project follows a **Decoupled Data Pipeline** architecture, separating high-frequency ingestion from the presentation layer.
 
-## 🧠 The Intelligence Lens (v1.5)
-The core of this project is a weighted scoring engine that prioritizes structural shifts over market noise.
+```mermaid
+graph TD
+    subgraph "Data Ingestion (Python/FastAPI)"
+        A[12 RSS Sources] -->|Scrape| B(Ingestion Engine)
+        B -->|v1.5 Scoring| C{Signal Scorer}
+        C -->|High Signal| D[(Supabase DB)]
+    end
 
-### **Priority 1: March 2026 Regulatory Blitz (+5.5)**
-Detects tectonic policy shifts including:
-* **CBK M-Pesa Number Masking:** Privacy-first fintech mandates.
-* **CA Rate Cuts (MTR):** Reduction of call charges to **Sh0.37**, altering telco competition.
+    subgraph "Intelligence Bridge"
+        D -->|SQL Aggregation| E[FastAPI REST API]
+        E -->|JSON| F[Momentum Endpoint]
+    end
 
-### **Priority 2: KIICO 2026 Deal Flow (+4.5)**
-Monitors the **$2 Billion (KES 258B)** bankable deal target and the **$75 Trillion** market access narrative.
+    subgraph "War Room (Next.js)"
+        F -->|Fetch| G[Momentum Chart]
+        G --> H[NairobiSignal Dashboard]
+        D -->|Fetch| I[Signal Cards]
+        I --> H
+    end
+    
+    ---
 
-### **Priority 3: Capital & Funding (+4.0)**
-Identifies hard cash signals ($10M+ raises, M&A, and VC activity).
+### **Step 5: Paste the "Parts List" (Tech Stack)**
+Copy and paste this table so people know what tools you used:
 
-### **Noise Suppression (-10.0)**
-Strictly filters "Soft News" including betting (Aviator), gossip, and speculative meme coins.
-
----
-
+```markdown
 ## 🛠️ Tech Stack
-* **Ingestion:** Python + Playwright v1.5 (Deep Reach Browser Automation).
-* **Intelligence:** Custom Regex & Pattern Matching Engine.
-* **Storage:** Supabase (PostgreSQL) with JSONB metadata explainability.
-* **Dissemination:** Resend API for automated HTML briefings.
-* **Automation:** Linux Crontab (Scheduled at 08:00 EAT).
 
----
+| Component | Technology |
+| :--- | :--- |
+| **Backend** | Python 3.12, FastAPI, Uvicorn |
+| **Database** | Supabase (PostgreSQL) |
+| **Frontend** | Next.js 16 (App Router), TypeScript |
+| **Styling** | Tailwind CSS v4 |
+| **Charts** | Recharts |
 
-## ⚡ Quick Start
+## 🚀 Quick Start
 
-### **1. Setup Environment**
+### 1. Start the Backend Engine
 ```bash
-# Clone and enter
-git clone <your-repo-url>
 cd nairobi-signal
-
-# Rebuild the environment
-python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
-
-# Install Playwright browsers
-playwright install firefox
+uvicorn api.main:app --reload --port 8000
