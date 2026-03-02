@@ -13,6 +13,7 @@ fastapi==0.134.0
 feedparser==6.0.12
 fsspec==2026.2.0
 greenlet==3.3.2
+gunicorn==25.1.0
 h11==0.16.0
 h2==4.3.0
 hpack==4.1.0
