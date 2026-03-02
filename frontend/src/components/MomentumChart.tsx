@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function MomentumChart() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
     // Fetching from your live Render Intelligence Bridge
