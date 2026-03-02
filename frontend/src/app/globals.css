@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* This fulfills the contract for the slate background we want */
+body {
+  background-color: #f8fafc; /* This is the hex code for slate-50 */
+  color: #0f172a;            /* This is the hex code for slate-900 */
+}

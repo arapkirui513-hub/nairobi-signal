@@ -1,82 +1,43 @@
-import { SignalHigh, TrendingUp } from "lucide-react";
-import SearchBar from '@/components/SearchBar';
-import { createClient } from '@supabase/supabase-js';
+'use client';
+import { useEffect, useState } from 'react';
+import MomentumChart from '../components/MomentumChart';
 
-// Initialize Supabase Client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+export default function Home() {
+  const [articles, setArticles] = useState([]);
 
-async function getHighSignal() {
-  // .gte(column, value) filters for "Greater Than or Equal To"
-  const { data, error } = await supabase
-    .from('articles')
-    .select('*')
-    .gte('signal_score', 5.0) 
-    .order('published_at', { ascending: false });
-
-  if (error) {
-    console.error("Fetch error:", error);
-    return [];
-  }
-  return data;
-}
-
-export default async function Home() {
-  const articles = await getHighSignal();
+  useEffect(() => {
+    fetch('http://127.0.0.1:8000/signals')
+      .then(r => r.json())
+      .then(data => setArticles(data))
+      .catch(err => console.error("Feed Error:", err));
+  }, []);
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <header className="flex justify-between items-center mb-10">
-          <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-              Nairobi<span className="text-green-600">Signal</span>
-            </h1>
-            <p className="text-slate-500 font-medium italic">High-Signal Intelligence Only</p>
+    <main className="min-h-screen bg-slate-50 py-12 px-6">
+      <div className="max-w-5xl mx-auto">
+        <header className="mb-12">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="bg-emerald-500 w-3 h-3 rounded-full animate-pulse"></span>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Live Intelligence</p>
           </div>
-          <div className="bg-green-600 p-3 rounded-full text-white shadow-lg">
-            <SignalHigh size={28} />
-          </div>
+          <h1 className="text-4xl font-black text-slate-900">NairobiSignal</h1>
         </header>
-
-        <SearchBar />
-
-        <div className="space-y-6">
-          {articles && articles.length > 0 ? (
-            articles.map((article: any) => (
-              <div key={article.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-green-400 transition-all">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded uppercase tracking-tighter">
-                    Score {article.signal_score}
-                  </span>
-                  <span className="text-slate-400 text-xs font-mono">
-                    {new Date(article.published_at).toLocaleDateString('en-KE')}
-                  </span>
-                </div>
-                <h2 className="text-xl font-bold text-slate-800 mb-2">{article.title}</h2>
-                <p className="text-slate-600 text-sm leading-relaxed mb-4 line-clamp-2">{article.summary}</p>
-                
-                {/* Visual Metadata: Why did this score high? */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {article.score_metadata?.components?.map((c: any, i: number) => (
-                    <span key={i} className="text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200 uppercase font-bold">
-                      {c.type.replace('_', ' ')}
-                    </span>
-                  ))}
-                </div>
-
-                <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-green-600 font-bold text-sm flex items-center gap-1 hover:underline">
-                  READ FULL ANALYSIS <TrendingUp size={14} />
-                </a>
+        <MomentumChart />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {articles.map((art: any) => (
+            <div key={art.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-500 uppercase">
+                  {art.sources?.name || 'News'}
+                </span>
+                <span className="text-sm font-black text-emerald-600">SIG {art.signal_score.toFixed(1)}</span>
               </div>
-            ))
-          ) : (
-            <div className="text-center py-20 border-2 border-dashed border-slate-200 rounded-3xl">
-              <p className="text-slate-400 font-medium">No structural shifts detected yet. Monitoring the ecosystem...</p>
+              <h3 className="text-lg font-bold text-slate-800 leading-snug mb-3">
+                <a href={art.url} target="_blank" className="hover:text-emerald-600 underline decoration-emerald-200">{art.title}</a>
+              </h3>
+              <p className="text-slate-500 text-sm line-clamp-3">{art.summary}</p>
             </div>
-          )}
+          ))}
         </div>
       </div>
     </main>
