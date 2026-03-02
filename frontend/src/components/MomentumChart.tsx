@@ -1,57 +1,50 @@
 'use client';
-import { useEffect, useState } from 'react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
+
+import React, { useEffect, useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function MomentumChart() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/momentum')
+    // Fetching from your live Render Intelligence Bridge
+    fetch('https://nairobi-signal-api.onrender.com/momentum')
       .then(r => r.json())
       .then(d => {
         setData(Array.isArray(d) ? d : []);
-        setLoading(false);
       })
-      .catch((err) => {
-        console.error("API Error:", err);
-        setLoading(false);
-      });
+      .catch(err => console.error("Momentum Fetch Error:", err));
   }, []);
 
-  const formatted = data.map((d: any) => ({
-    week: new Date(d.week).toLocaleDateString('en-KE', { month: 'short', day: 'numeric' }),
-    Capital: Number(d.capital_count),
-    Policy: Number(d.policy_count),
-    Growth: Number(d.growth_count),
-  }));
-
-  if (loading) return <div className="h-64 flex items-center justify-center text-slate-400">Loading Momentum...</div>;
-  if (!formatted.length) return <div className="h-64 flex items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 rounded-2xl">Accumulating Weekly Data...</div>;
-
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-10 shadow-sm">
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-slate-800 tracking-tight">Ecosystem Momentum</h2>
+        <h3 className="text-lg font-bold text-slate-800">Ecosystem Momentum</h3>
         <p className="text-sm text-slate-500">Weekly split of Capital vs. Policy signals</p>
       </div>
       
-      <div className="h-64 w-full">
+      <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={formatted} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-            <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
-            <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
-            <Tooltip 
-              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+            <XAxis 
+              dataKey="week" 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{fill: '#64748b', fontSize: 11, fontWeight: 500}}
+              tickFormatter={(str) => {
+                const date = new Date(str);
+                return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+              }}
             />
-            <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-            <Bar dataKey="Capital" stackId="a" fill="#16a34a" radius={[0, 0, 0, 0]} />
-            <Bar dataKey="Policy" stackId="a" fill="#f59e0b" radius={[0, 0, 0, 0]} />
-            <Bar dataKey="Growth" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11}} />
+            <Tooltip 
+              cursor={{fill: '#f8fafc'}}
+              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+            />
+            <Legend iconType="circle" verticalAlign="top" align="right" wrapperStyle={{paddingBottom: '20px'}} />
+            <Bar dataKey="capital_count" name="Capital" stackId="a" fill="#22c55e" radius={[2, 2, 0, 0]} barSize={40} />
+            <Bar dataKey="policy_count" name="Policy" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={40} />
           </BarChart>
         </ResponsiveContainer>
       </div>
