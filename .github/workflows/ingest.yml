@@ -1,0 +1,48 @@
+name: NairobiSignal Ingestion
+
+on:
+  schedule:
+    - cron: '0 5,9,13,17 * * *'
+  workflow_dispatch:
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run ingestion
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python3 ingest.py
+```
+
+Save with `Ctrl+S`. Close gedit.
+
+---
+
+**Step 2 — Add secrets to GitHub**
+
+Go to:
+```
+github.com → nairobi-signal → Settings → Secrets and variables → Actions → New repository secret
+```
+
+Add two secrets:
+```
+Name: SUPABASE_URL
+Value: https://vnoeoxkfhbzwhxxcgzyh.supabase.co
+
+Name: SUPABASE_KEY
+Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZub2VveGtmaGJ6d2h4eGNnenloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzMDQ1MTgsImV4cCI6MjA4Nzg4MDUxOH0.7c08PtHq2qpszX4yU1CJmHxuNcNpCBLc7zbwB6zSm-g
