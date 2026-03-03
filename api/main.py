@@ -32,7 +32,7 @@ def get_signal():
     try:
         result = supabase.table("articles")\
             .select("*, sources(name)")\
-            .gte("signal_score", 2.0)\
+            .gte("signal_score", 3.0)\
             .order("signal_score", desc=True)\
             .limit(20)\
             .execute()
