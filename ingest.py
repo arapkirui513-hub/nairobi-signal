@@ -4,6 +4,7 @@ import hashlib
 import logging
 import feedparser
 from datetime import datetime
+from dateutil import parser as dateparser
 from dotenv import load_dotenv
 from supabase import create_client
 
@@ -25,8 +26,45 @@ if not url or not key:
 
 supabase = create_client(url, key)
 
+SECTORS = {
+    "fintech": ["mpesa", "m-pesa", "banking", "payments", "lending", "cbr", "fintech", "remittance", "mobile money"],
+    "telecom": ["safaricom", "airtel", "telecom", "mtr", "fibre", "fiber", "connectivity", "5g", "satellite"],
+    "policy": ["regulation", "cbk", "tax", "directive", "gazetted", "parliament", "fine", "penalty"],
+    "ai_data": ["artificial intelligence", "data protection", "machine learning", "automation", "privacy"],
+    "startup": ["funding", "raised", "pitch", "incubator", "venture", "equity", "series a", "series b"],
+    "healthtech": ["health", "medical", "hospital", "pharma", "biomedical"]
+}
+
+def classify_sector(text):
+    text = text.lower()
+    for sector, keywords in SECTORS.items():
+        if any(word in text for word in keywords):
+            return sector
+    return "general"
+
 def generate_hash(link):
     return hashlib.md5(link.encode()).hexdigest()
+
+def parse_date(entry):
+    try:
+        raw = entry.get('published') or entry.get('updated') or ''
+        return dateparser.parse(raw).isoformat()
+    except Exception:
+        return datetime.utcnow().isoformat()
+
+def parse_entries(feed):
+    entries = feed.entries
+    try:
+        entries = sorted(
+            entries,
+            key=lambda e: dateparser.parse(
+                e.get('published') or e.get('updated') or '2000-01-01'
+            ),
+            reverse=True
+        )
+    except Exception:
+        pass
+    return entries[:20]
 
 def run():
     start = datetime.now()
@@ -51,27 +89,21 @@ def run():
             total_errors += 1
             continue
 
-        for entry in feed.entries[:20]:
+        entries = parse_entries(feed)
+
+        for entry in entries:
             title = entry.get('title', 'Untitled')
             link = entry.get('link', '')
             summary = entry.get('summary', entry.get('description', ''))
-            published = entry.get('published', datetime.now().isoformat())
+            published = parse_date(entry)
 
             if not link:
                 continue
 
             content_hash = generate_hash(link)
+            sector = classify_sector(f"{title} {summary}")
 
             try:
-                existing = supabase.table("articles")\
-                    .select("id")\
-                    .eq("content_hash", content_hash)\
-                    .execute()
-
-                if len(existing.data) > 0:
-                    total_skipped += 1
-                    continue
-
                 article_data = {
                     "title": title,
                     "url": link,
@@ -79,16 +111,21 @@ def run():
                     "published_at": published,
                     "content_hash": content_hash,
                     "source_id": source['id'],
-                    "signal_score": 1.0
+                    "signal_score": 1.0,
+                    "sector": sector
                 }
 
                 supabase.table("articles").insert(article_data).execute()
                 total_saved += 1
-                log.info(f"  Saved: {title[:60]}")
+                log.info(f"  Saved: {title[:60]} [{sector}]")
 
             except Exception as e:
-                log.error(f"  Error on article: {e}")
-                total_errors += 1
+                err_str = str(e).lower()
+                if "duplicate" in err_str or "unique" in err_str or "23505" in err_str:
+                    total_skipped += 1
+                else:
+                    log.error(f"  Error: {e}")
+                    total_errors += 1
                 continue
 
     end = datetime.now()
@@ -96,9 +133,9 @@ def run():
 
     log.info("=" * 50)
     log.info(f"Ingestion complete in {duration}s")
-    log.info(f"Inserted/Updated : {total_saved}")
-    log.info(f"Skipped          : {total_skipped}")
-    log.info(f"Errors           : {total_errors}")
+    log.info(f"Saved    : {total_saved}")
+    log.info(f"Skipped  : {total_skipped}")
+    log.info(f"Errors   : {total_errors}")
     log.info("=" * 50)
 
 if __name__ == "__main__":
