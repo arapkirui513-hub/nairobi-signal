@@ -5,67 +5,77 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 load_dotenv()
+
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
-# Regex for Currency Detection (KSh, Kes, $, Trillion, Billion)
 MONEY_PATTERN = r'(?i)(?:KSh|Kes|Sh|\$|US\$)\s?\d+(?:\.\d+)?\s?(?:m|million|b|billion|trillion)?'
+PERCENT_PATTERN = r'\d+(?:\.\d+)?\s?percent'
 
 def calculate_score(title, summary):
     text = f"{title} {summary or ''}".lower()
     score = 1.0
     components = []
 
-    # --- 1. MARCH 2026 REGULATORY & POLICY (+5.5) ---
-    # High-impact news: CBK M-Pesa Masking & CA Call Rate Cuts
-    policy_triggers = [
-        "number masking", "phone masking", "mtr", "termination rate", 
-        "call charges", "interconnect", "slashed", "lowered", "sh0.37"
-    ]
-    if any(word in text for word in policy_triggers):
-        score += 5.5
-        components.append({"type": "march_regulatory_shift", "impact": 5.5})
+    policy_map = {
+        "number masking": 5.5, "phone masking": 5.5,
+        "mtr": 5.5, "termination rate": 5.5,
+        "cbr": 5.0, "monetary policy": 5.0, "interest rate": 4.5,
+        "regulation": 3.0, "lending": 2.5, "digital lending": 3.5,
+        "fine": 4.0, "penalty": 4.0, "slapped": 3.5
+    }
+    for word, weight in policy_map.items():
+        if word in text:
+            score += weight
+            components.append({"type": "policy_regulatory", "keyword": word, "impact": weight})
 
-    # --- 2. KIICO 2026 DEAL TRACKER (+4.5) ---
-    # Tracking the $2B bankable deal target and $75T access narrative
-    kiico_triggers = ["kiico", "investment deals", "bankable", "fdi target", "2 billion", "75 trillion"]
-    if any(word in text for word in kiico_triggers):
-        score += 4.5
-        components.append({"type": "kiico_deal_signal", "impact": 4.5})
+    capital_map = {
+        "innovation fund": 5.0, "funding": 4.0, "raised": 4.0,
+        "acquisition": 4.5, "acquires": 4.5, "ipo": 4.5,
+        "investment": 3.0, "stablecoin": 2.5, "equity": 3.0
+    }
+    for word, weight in capital_map.items():
+        if word in text:
+            score += weight
+            components.append({"type": "capital_market", "keyword": word, "impact": weight})
 
-    # --- 3. CAPITAL & FUNDING (+4.0) ---
-    if any(word in text for word in ["raised", "funding", "million", "billion", "equity"]):
-        if re.search(MONEY_PATTERN, text):
-            score += 4.0
-            components.append({"type": "capital_signal_with_value", "impact": 4.0})
-        else:
-            score += 2.0
-            components.append({"type": "capital_keyword_only", "impact": 2.0})
+    strategy_map = {
+        "cuts": 4.0, "workforce reduction": 4.5, "layoffs": 4.0,
+        "satellite": 3.0, "kuiper": 4.0, "expansion": 2.5,
+        "kiico": 4.5, "bankable": 4.0
+    }
+    for word, weight in strategy_map.items():
+        if word in text:
+            score += weight
+            components.append({"type": "strategic_recalibration", "keyword": word, "impact": weight})
 
-    # --- 4. NOISE FILTERS (Hard Zero) ---
-    if any(word in text for word in ["aviator", "betting", "odds", "meme coin", "altcoin"]):
+    if re.search(MONEY_PATTERN, text) or re.search(PERCENT_PATTERN, text):
+        score += 1.5
+        components.append({"type": "hard_data_verification", "impact": 1.5})
+
+    if any(word in text for word in ["aviator", "betting", "odds", "meme coin"]):
         return 0.0, [{"type": "hard_noise_filter", "impact": -10.0}]
 
     return max(0.0, min(10.0, score)), components
 
 def run_scorer():
-    print(f"\n🚀 NAIROBISIGNAL | Intelligence Lens v1.5 [Final Calibration]")
-    print("-" * 60)
-    
-    # Process only baseline articles (1.0)
-    res = supabase.table("articles").select("*").eq("signal_score", 1.0).execute()
+    print(f"\n🚀 NAIROBISIGNAL | Intelligence Lens v1.6 [Refined Calibration]")
+    print("-" * 65)
+
+    res = supabase.table("articles").select("*").lte("signal_score", 1.1).execute()
     articles = res.data
 
     if not articles:
-        print("💡 All articles are currently calibrated.")
+        print("💡 All signals are currently calibrated to v1.6.")
         return
 
     for art in articles:
         score, meta = calculate_score(art['title'], art['summary'])
-        supabase.table("articles").update({
-            "signal_score": score,
-            "score_metadata": {"components": meta, "version": "1.5", "ts": "2026-03-02"}
-        }).eq("id", art['id']).execute()
-        print(f"  ✓ [{score:4.1f}] {art['title'][:55]}...")
+        if score > 1.0:
+            supabase.table("articles").update({
+                "signal_score": score,
+                "score_metadata": {"components": meta, "version": "1.6", "ts": "2026-03-04"}
+            }).eq("id", art['id']).execute()
+            print(f"  ✓ [{score:4.1f}] {art['title'][:55]}...")
 
 if __name__ == "__main__":
     run_scorer()
