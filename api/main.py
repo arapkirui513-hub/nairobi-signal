@@ -32,8 +32,8 @@ def get_signal():
     try:
         result = supabase.table("articles")\
             .select("*, sources(name)")\
-            .gte("signal_score", 3.0)\
-            .order("signal_score", desc=True)\
+            .gte("signal_score", 5.0)\
+            .order("published_at", desc=True)\
             .limit(20)\
             .execute()
         return result.data
