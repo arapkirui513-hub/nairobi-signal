@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 load_dotenv()
-
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 
 MONEY_PATTERN = r'(?i)(?:KSh|Kes|Sh|\$|US\$)\s?\d+(?:\.\d+)?\s?(?:m|million|b|billion|trillion)?'
@@ -31,7 +30,9 @@ def calculate_score(title, summary):
     capital_map = {
         "innovation fund": 5.0, "funding": 4.0, "raised": 4.0,
         "acquisition": 4.5, "acquires": 4.5, "ipo": 4.5,
-        "investment": 3.0, "stablecoin": 2.5, "equity": 3.0
+        "investment": 3.0, "stablecoin": 2.5, "equity": 3.0,
+        "takeover": 4.5, "acquisition approval": 5.0, "comesa": 4.0,
+        "merger": 4.0, "clearance": 3.5, "approved": 3.0
     }
     for word, weight in capital_map.items():
         if word in text:
@@ -58,22 +59,19 @@ def calculate_score(title, summary):
     return max(0.0, min(10.0, score)), components
 
 def run_scorer():
-    print(f"\n🚀 NAIROBISIGNAL | Intelligence Lens v1.6 [Refined Calibration]")
+    print(f"\n🚀 NAIROBISIGNAL | Intelligence Lens v1.7 [COMESA + Merger Keywords]")
     print("-" * 65)
-
     res = supabase.table("articles").select("*").lte("signal_score", 1.1).execute()
     articles = res.data
-
     if not articles:
-        print("💡 All signals are currently calibrated to v1.6.")
+        print("💡 All signals are currently calibrated to v1.7.")
         return
-
     for art in articles:
         score, meta = calculate_score(art['title'], art['summary'])
         if score > 1.0:
             supabase.table("articles").update({
                 "signal_score": score,
-                "score_metadata": {"components": meta, "version": "1.6", "ts": "2026-03-04"}
+                "score_metadata": {"components": meta, "version": "1.7", "ts": "2026-03-08"}
             }).eq("id", art['id']).execute()
             print(f"  ✓ [{score:4.1f}] {art['title'][:55]}...")
 
