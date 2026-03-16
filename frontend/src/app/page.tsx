@@ -9,6 +9,9 @@ import LeftPanel    from '@/components/LeftPanel';
 import CenterPanel  from '@/components/CenterPanel';
 import RightPanel   from '@/components/RightPanel';
 
+export const dynamic = 'force-dynamic';
+
+const SECTOR_FALLBACK: SectorStat[] = [
 // Fallbacks used only if views return empty
 const SECTOR_FALLBACK: SectorStat[] = [
   { name: 'FINTECH', pct: 41, z_score:  1.4 },
