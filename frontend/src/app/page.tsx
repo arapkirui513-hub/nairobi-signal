@@ -12,8 +12,6 @@ import RightPanel   from '@/components/RightPanel';
 export const dynamic = 'force-dynamic';
 
 const SECTOR_FALLBACK: SectorStat[] = [
-// Fallbacks used only if views return empty
-const SECTOR_FALLBACK: SectorStat[] = [
   { name: 'FINTECH', pct: 41, z_score:  1.4 },
   { name: 'STARTUP', pct: 28, z_score:  0.8 },
   { name: 'POLICY',  pct: 24, z_score:  0.6 },
