@@ -1,7 +1,50 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 
-/* This fulfills the contract for the slate background we want */
-body {
-  background-color: #f8fafc; /* This is the hex code for slate-50 */
-  color: #0f172a;            /* This is the hex code for slate-900 */
+:root {
+  --bg:      #060809;
+  --s1:      #0c0f12;
+  --s2:      #111519;
+  --s3:      #161c22;
+  --bd:      #1a2128;
+  --bd2:     #222c35;
+  --capital: #00ff88;
+  --policy:  #ff8c32;
+  --infra:   #22cfff;
+  --text:    rgba(255, 255, 255, 0.87);
+  --text2:   rgba(255, 255, 255, 0.48);
+  --text3:   rgba(255, 255, 255, 0.2);
+  --mono:    'JetBrains Mono', monospace;
+  --serif:   'DM Serif Display', serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow: hidden;
+  background-image: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0, 255, 136, 0.004) 2px,
+    rgba(0, 255, 136, 0.004) 3px
+  );
+}
+
+::-webkit-scrollbar { width: 2px; }
+::-webkit-scrollbar-thumb { background: var(--bd2); }
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
