@@ -6,7 +6,9 @@ import type {
 import DashboardShell from '@/components/DashboardShell';
 
 export const dynamic = 'force-dynamic';
-const ARTICLE_RECENCY_CUTOFF_ISO = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+const RECENCY_DAYS = 14;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const ARTICLE_RECENCY_CUTOFF_ISO = new Date(Date.now() - RECENCY_DAYS * MS_PER_DAY).toISOString();
 const DEFAULT_SECTOR = 'general';
 
 type RawArticle = Article & {
