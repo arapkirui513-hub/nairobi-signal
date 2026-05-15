@@ -186,20 +186,20 @@ export default function CenterPanel({
     return { positions: result, total: cursor };
   }, [rows]);
 
-  const [start, end] = useMemo(() => {
+  const [startIndex, endIndex] = useMemo(() => {
     // Keep rows just outside the viewport rendered to avoid visible pop-in during fast scroll.
     const top = Math.max(scrollTop - PRELOAD_BUFFER_PX, 0);
     const bottom = scrollTop + viewportHeight + PRELOAD_BUFFER_PX;
-    let s = 0;
-    while (s < rows.length) {
-      const rowBottom = offsets.positions[s] + (rows[s].type === 'header' ? HEADER_HEIGHT : CARD_HEIGHT);
+    let startIndex = 0;
+    while (startIndex < rows.length) {
+      const rowBottom = offsets.positions[startIndex] + (rows[startIndex].type === 'header' ? HEADER_HEIGHT : CARD_HEIGHT);
       if (rowBottom >= top) break;
-      s += 1;
+      startIndex += 1;
     }
 
-    let e = s;
-    while (e < rows.length && offsets.positions[e] <= bottom) e += 1;
-    return [s, Math.min(e + 1, rows.length)];
+    let endIndex = startIndex;
+    while (endIndex < rows.length && offsets.positions[endIndex] <= bottom) endIndex += 1;
+    return [startIndex, Math.min(endIndex + 1, rows.length)];
   }, [rows, offsets, scrollTop, viewportHeight]);
 
   return (
@@ -309,8 +309,8 @@ export default function CenterPanel({
           </div>
         ) : (
           <div style={{ height: offsets.total, position: 'relative' }}>
-            {rows.slice(start, end).map((row, index) => {
-              const rowIndex = start + index;
+            {rows.slice(startIndex, endIndex).map((row, index) => {
+              const rowIndex = startIndex + index;
               const top = offsets.positions[rowIndex];
 
               if (row.type === 'header') {

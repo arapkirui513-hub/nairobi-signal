@@ -84,7 +84,9 @@ export default function LeftPanel({ sectors, articles, selectedSectorFilter, onS
           const zLabel = `${s.z_score > 0 ? '+' : ''}${s.z_score.toFixed(1)}σ`;
           const barPct = Math.min((Math.abs(s.z_score) / 2) * 100, 100);
           const estCount = Math.round((s.pct / 100) * total);
-          const trend = s.z_score > 0 ? 'rising' : s.z_score < 0 ? 'cooling' : 'flat';
+          let trend = 'flat';
+          if (s.z_score > 0) trend = 'rising';
+          else if (s.z_score < 0) trend = 'cooling';
           const tooltip = `${s.name}: ${s.pct}% (~${estCount} of ${total}) • Trend ${trend}`;
 
           return (

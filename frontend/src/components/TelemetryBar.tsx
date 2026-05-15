@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-const TICKER_ITEMS = [
+const TICKER_PLACEHOLDER_ITEMS = [
   { label: 'CBK SANDBOX DIRECTIVE — SIG 6.5', cls: 'po' },
   { label: 'MPESA MASKED NUMBERS — SIG 7.5', cls: 'ok' },
   { label: 'CLOUD REGION EXPANSION — INFRA 5.8', cls: 'infra' },
@@ -50,7 +50,7 @@ export default function TelemetryBar({ totalSignals, highSig, activeSources, las
     return () => clearInterval(id);
   }, []);
 
-  const doubled = useMemo(() => [...TICKER_ITEMS, ...TICKER_ITEMS], []);
+  const doubled = useMemo(() => [...TICKER_PLACEHOLDER_ITEMS, ...TICKER_PLACEHOLDER_ITEMS], []);
   const relative = formatRelative(lastUpdatedIso);
 
   return (
@@ -73,7 +73,7 @@ export default function TelemetryBar({ totalSignals, highSig, activeSources, las
       <div style={{ flex: 1, overflow: 'hidden', height: 30, display: 'flex', alignItems: 'center', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 6%, black 92%, transparent)' }}>
         <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', animation: 'ticker 80s linear infinite' }}>
           {doubled.map((item, i) => (
-            <span key={`${item.label}-${i}`} style={{ color: COLOR[item.cls], padding: '0 16px', fontSize: 8.5 }}>
+            <span key={`${i < TICKER_PLACEHOLDER_ITEMS.length ? 'first' : 'second'}-${item.label}`} style={{ color: COLOR[item.cls], padding: '0 16px', fontSize: 8.5 }}>
               {item.label}
             </span>
           ))}
