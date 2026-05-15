@@ -7,6 +7,12 @@ import DashboardShell from '@/components/DashboardShell';
 
 export const dynamic = 'force-dynamic';
 
+type RawArticle = Article & {
+  sector?: string | null;
+  classification_v1?: string | null;
+  classification_v2?: string | null;
+};
+
 const SECTOR_FALLBACK: SectorStat[] = [
   { name: 'FINTECH', pct: 41, z_score:  1.4 },
   { name: 'STARTUP', pct: 28, z_score:  0.8 },
@@ -26,6 +32,8 @@ const MOMENTUM_FALLBACK: WeeklyMomentum[] = [
 ];
 
 export default async function HomePage() {
+  const recentCutoffIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
   const [
     { data: articles,  error: articlesError  },
     { data: sectors,   error: sectorsError   },
@@ -34,7 +42,9 @@ export default async function HomePage() {
   ] = await Promise.all([
     supabase
       .from('articles')
-      .select('id, title, url, summary, signal_score, sector, published_at, created_at')
+      .select('id, title, url, summary, signal_score, sector, classification_v1, classification_v2, published_at, created_at')
+      .gte('published_at', recentCutoffIso)
+      .order('published_at', { ascending: false })
       .order('signal_score', { ascending: false })
       .limit(250),
 
@@ -59,7 +69,10 @@ export default async function HomePage() {
   if (momentumError)  console.error('momentum:',  momentumError.message);
   if (logsError)      console.error('logs:',      logsError.message);
 
-  const safeArticles: Article[]      = (articles  ?? []) as Article[];
+  const safeArticles: Article[] = ((articles ?? []) as RawArticle[]).map((article) => ({
+    ...article,
+    sector: article.sector ?? article.classification_v2 ?? article.classification_v1 ?? 'general',
+  }));
   const safeLogs: IngestionLog[]     = (logs      ?? []) as IngestionLog[];
 
   const safeSectors: SectorStat[] = sectors && sectors.length > 0
