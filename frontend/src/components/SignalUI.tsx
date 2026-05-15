@@ -3,7 +3,7 @@ import React from 'react';
 interface SignalUIProps {
   loading: boolean;
   error: string | null;
-  data: any[];
+  data: unknown[];
   children: React.ReactNode;
 }
 

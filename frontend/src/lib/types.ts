@@ -22,6 +22,7 @@ export interface WeeklyMomentum {
   week: string;
   capital: number;
   policy: number;
+  infra: number;
 }
 
 export interface IngestionLog {
@@ -43,6 +44,7 @@ export interface SectorStatRow {
 
 export interface MomentumRow {
   week: string;
-  capital: number;
-  policy: number;
+  capital: number | null;
+  policy: number | null;
+  infra: number | null;
 }
