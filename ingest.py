@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 from geo_tagger import tag_article, GeoResult
-from taxonomy_registry import SECTORS as SECTOR_REGISTRY, validate_sector
+from taxonomy_registry import validate_sector
 
 # ── USER-AGENT ROTATION ───────────────────────────────────────────────────
 
@@ -492,66 +492,67 @@ def run():
                 stats.errors += 1
                 continue
 
-        for entry in entries:
-            title = entry.get('title', 'Untitled')
-            link = entry.get('link', '')
-            summary = entry.get('summary', entry.get('description', ''))
-            published = parse_date(entry)
+        if not use_playwright:
+            for entry in entries:
+                title = entry.get('title', 'Untitled')
+                link = entry.get('link', '')
+                summary = entry.get('summary', entry.get('description', ''))
+                published = parse_date(entry)
 
-            if not link:
-                continue
+                if not link:
+                    continue
 
-            content_hash = generate_hash(link)
-            full_text = f"{title} {summary}"
+                content_hash = generate_hash(link)
+                full_text = f"{title} {summary}"
 
-            sector_v1 = classify_sector(full_text)
-            if sector_v1 == "general":
-                stats.general_count += 1
+                sector_v1 = classify_sector(full_text)
+                if sector_v1 == "general":
+                    stats.general_count += 1
 
-            geo = tag_article(title=title, body=summary)
+                geo = tag_article(title=title, body=summary)
 
-            signal_score, score_metadata = compute_signal_score(title, summary)
+                signal_score, score_metadata = compute_signal_score(title, summary)
 
-            article_data = {
-                "title": title,
-                "url": link,
-                "summary": summary[:500],
-                "published_at": published,
-                "content_hash": content_hash,
-                "source_id": source['id'],
-                "signal_score": signal_score,
-                "score_metadata": score_metadata,
-                "classification_v1": sector_v1,
-                "classification_v2": None,
-                "geo_scope": geo.geo_scope,
-                "is_kenya_relevant": geo.is_kenya_relevant,
-                "geo_confidence": geo.confidence,
-                "geo_reasoning": geo.reasoning,
-            }
+                article_data = {
+                    "title": title,
+                    "url": link,
+                    "summary": summary[:500],
+                    "published_at": published,
+                    "content_hash": content_hash,
+                    "source_id": source['id'],
+                    "signal_score": signal_score,
+                    "score_metadata": score_metadata,
+                    "classification_v1": sector_v1,
+                    "classification_v2": None,
+                    "geo_scope": geo.geo_scope,
+                    "is_kenya_relevant": geo.is_kenya_relevant,
+                    "geo_confidence": geo.confidence,
+                    "geo_reasoning": geo.reasoning,
+                }
 
-            try:
-                supabase.table("articles").insert(article_data).execute()
-                stats.saved += 1
+                try:
+                    supabase.table("articles").insert(article_data).execute()
+                    stats.saved += 1
 
-                if geo.geo_scope == "KENYA":
-                    stats.geo_kenya += 1
-                elif geo.geo_scope == "PAN_AFRICA":
-                    stats.geo_pan_africa += 1
-                else:
-                    stats.geo_global += 1
+                    if geo.geo_scope == "KENYA":
+                        stats.geo_kenya += 1
+                    elif geo.geo_scope == "PAN_AFRICA":
+                        stats.geo_pan_africa += 1
+                    else:
+                        stats.geo_global += 1
 
-                log.info(
-                    f" ✓ [{sector_v1:<14}] [{geo.geo_scope:<10}] "
-                    f"SIG:{signal_score:<4} {title[:50]}"
-                )
+                    log.info(
+                        f" ✓ [{sector_v1:<14}] [{geo.geo_scope:<10}] "
+                        f"SIG:{signal_score:<4} {title[:50]}"
+                    )
 
-            except Exception as e:
-                err_str = str(e).lower()
-                if "duplicate" in err_str or "unique" in err_str or "23505" in err_str:
-                    stats.skipped += 1
-                else:
-                    log.error(f" ✗ Insert error: {e}")
-                    stats.errors += 1
+                except Exception as e:
+                    err_str = str(e).lower()
+                    if "duplicate" in err_str or "unique" in err_str or "23505" in err_str:
+                        stats.skipped += 1
+                    else:
+                        log.error(f" ✗ Insert error: {e}")
+                        stats.errors += 1
 
     stats.end_time = datetime.now(timezone.utc)
     write_heartbeat(stats)
