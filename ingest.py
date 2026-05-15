@@ -491,8 +491,8 @@ def run():
                 log.error(f" ✗ Playwright fallback failed: {pw_error}")
                 stats.errors += 1
                 continue
-
-            continue
+            else:
+                continue
 
         for entry in entries:
             title = entry.get('title', 'Untitled')
