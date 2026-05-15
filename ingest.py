@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 from geo_tagger import tag_article, GeoResult
-from taxonomy_registry import SECTORS as SECTOR_REGISTRY, validate_sector
+from taxonomy_registry import validate_sector
 
 # ── USER-AGENT ROTATION ───────────────────────────────────────────────────
 
@@ -491,6 +491,8 @@ def run():
                 log.error(f" ✗ Playwright fallback failed: {pw_error}")
                 stats.errors += 1
                 continue
+
+            continue
 
         for entry in entries:
             title = entry.get('title', 'Untitled')
