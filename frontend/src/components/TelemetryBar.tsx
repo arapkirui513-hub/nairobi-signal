@@ -39,11 +39,14 @@ export default function TelemetryBar({ totalSignals, highSig, activeSources, las
   const [clock, setClock] = useState('--:--:-- UTC');
 
   useEffect(() => {
-    const id = setInterval(() => {
+    const updateClock = () => {
       const n = new Date();
       const p = (x: number) => x.toString().padStart(2, '0');
       setClock(`${p(n.getUTCHours())}:${p(n.getUTCMinutes())}:${p(n.getUTCSeconds())} UTC`);
-    }, 1000);
+    };
+
+    updateClock();
+    const id = setInterval(updateClock, 1000);
     return () => clearInterval(id);
   }, []);
 

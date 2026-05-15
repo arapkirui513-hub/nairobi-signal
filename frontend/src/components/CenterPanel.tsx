@@ -90,7 +90,9 @@ type FeedRow =
 const HEADER_HEIGHT = 30;
 const CARD_HEIGHT = 158;
 const BATCH_SIZE = 40;
+// Amount of off-screen rows to keep mounted above and below viewport for smooth scrolling.
 const PRELOAD_BUFFER_PX = 900;
+// Distance from list bottom before requesting the next infinite-scroll batch.
 const LOAD_MORE_THRESHOLD_PX = 600;
 
 export default function CenterPanel({
@@ -185,7 +187,7 @@ export default function CenterPanel({
   }, [rows]);
 
   const [start, end] = useMemo(() => {
-    // Keep rows just outside viewport rendered to avoid visible pop-in during fast scroll.
+    // Keep rows just outside the viewport rendered to avoid visible pop-in during fast scroll.
     const top = Math.max(scrollTop - PRELOAD_BUFFER_PX, 0);
     const bottom = scrollTop + viewportHeight + PRELOAD_BUFFER_PX;
     let s = 0;
@@ -438,6 +440,7 @@ export default function CenterPanel({
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 'auto' }}>
                       <span style={{ fontSize: 6.5, color: 'var(--text3)' }}>{sourceHost(a.url)}</span>
                       <button
+                        aria-label={pinnedState ? `Unpin signal ${a.title}` : `Pin signal ${a.title}`}
                         onClick={() => setPinned((prev) => ({ ...prev, [a.id]: !prev[a.id] }))}
                         style={{
                           fontSize: 7,

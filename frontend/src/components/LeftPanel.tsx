@@ -93,6 +93,7 @@ export default function LeftPanel({ sectors, articles, selectedSectorFilter, onS
               <span style={{ fontSize: 7.5, letterSpacing: '1.3px', textTransform: 'uppercase', flex: 1 }}>{s.name}</span>
               <span style={{ fontSize: 8, color: 'var(--text2)' }}>{s.pct}%</span>
               <button
+                aria-label={`${isActive ? 'Clear' : 'Apply'} sector filter for ${s.name}`}
                 onClick={() => onSelectSectorFilter(isActive ? null : key)}
                 style={{
                   fontSize: 8.5,

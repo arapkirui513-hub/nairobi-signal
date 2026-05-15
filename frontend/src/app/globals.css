@@ -132,10 +132,10 @@ body {
   border-radius: 50%;
   background: var(--capital);
   box-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
-  animation: pulse 1.6s ease-out infinite;
+  animation: statusDotPulse 1.6s ease-out infinite;
 }
 
-@keyframes pulse {
+@keyframes statusDotPulse {
   0%,
   100% {
     opacity: 0.95;
