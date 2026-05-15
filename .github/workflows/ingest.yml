@@ -15,16 +15,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: python -m playwright install --with-deps chromium
 
       - name: Run ingestion
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: python3 ingest.py
