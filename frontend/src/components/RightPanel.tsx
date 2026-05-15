@@ -19,7 +19,7 @@ interface Props {
 
 export default function RightPanel({ articles, momentum, logs }: Props) {
   const highSig = articles.filter((a) => a.signal_score >= 7).length;
-  const suppressed = articles.filter((a) => a.signal_score < 5).length;
+  const lowSig = articles.filter((a) => a.signal_score < 5).length;
   const avgScore = articles.length
     ? (articles.reduce((s, a) => s + a.signal_score, 0) / articles.length).toFixed(1)
     : '—';
@@ -37,7 +37,7 @@ export default function RightPanel({ articles, momentum, logs }: Props) {
             { label: 'SIGNALS', val: articles.length, color: 'var(--text)' },
             { label: 'AVG SIG', val: avgScore, color: 'var(--sig-strong)' },
             { label: 'HIGH ≥7', val: highSig, color: 'var(--capital)' },
-            { label: 'LOW <5', val: suppressed, color: 'var(--sig-low)' },
+            { label: 'LOW <5', val: lowSig, color: 'var(--sig-low)' },
           ].map((b) => (
             <div key={b.label} className="terminal-surface" style={{ padding: '10px 10px', border: '1px solid var(--bd)' }}>
               <div style={{ fontSize: 6.5, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text3)', marginBottom: 4 }}>{b.label}</div>

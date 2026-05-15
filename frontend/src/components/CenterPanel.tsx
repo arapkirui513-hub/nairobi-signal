@@ -42,9 +42,18 @@ function scoreBand(score: number): string {
 
 function timeAgo(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 3600) return `${Math.max(Math.floor(diff / 60), 1)}m ago`;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
+}
+
+function summaryText(raw?: string): string {
+  const source = raw?.trim() ?? '';
+  if (!source) return '';
+  if (typeof window === 'undefined') return source;
+  const parser = new DOMParser();
+  return parser.parseFromString(source, 'text/html').body.textContent?.trim() ?? '';
 }
 
 function sourceHost(url: string): string {
@@ -81,7 +90,8 @@ type FeedRow =
 const HEADER_HEIGHT = 30;
 const CARD_HEIGHT = 158;
 const BATCH_SIZE = 40;
-const BUFFER = 900;
+const PRELOAD_BUFFER_PX = 900;
+const LOAD_MORE_THRESHOLD_PX = 600;
 
 export default function CenterPanel({
   articles,
@@ -175,8 +185,9 @@ export default function CenterPanel({
   }, [rows]);
 
   const [start, end] = useMemo(() => {
-    const top = Math.max(scrollTop - BUFFER, 0);
-    const bottom = scrollTop + viewportHeight + BUFFER;
+    // Keep rows just outside viewport rendered to avoid visible pop-in during fast scroll.
+    const top = Math.max(scrollTop - PRELOAD_BUFFER_PX, 0);
+    const bottom = scrollTop + viewportHeight + PRELOAD_BUFFER_PX;
     let s = 0;
     while (s < rows.length) {
       const rowBottom = offsets.positions[s] + (rows[s].type === 'header' ? HEADER_HEIGHT : CARD_HEIGHT);
@@ -285,7 +296,7 @@ export default function CenterPanel({
           const el = e.currentTarget;
           setScrollTop(el.scrollTop);
           setViewportHeight(el.clientHeight);
-          if (el.scrollTop + el.clientHeight >= el.scrollHeight - 600 && visibleCount < filtered.length) {
+          if (el.scrollTop + el.clientHeight >= el.scrollHeight - LOAD_MORE_THRESHOLD_PX && visibleCount < filtered.length) {
             setVisibleCount((c) => Math.min(c + BATCH_SIZE, filtered.length));
           }
         }}
@@ -332,7 +343,7 @@ export default function CenterPanel({
               const a = row.article;
               const isHovered = hoveredId === a.id;
               const isExpanded = Boolean(expanded[a.id]);
-              const summary = a.summary?.replace(/<[^>]*>/g, '').trim() ?? '';
+              const summary = summaryText(a.summary);
               const color = scoreColor(a.signal_score);
               const pinnedState = Boolean(pinned[a.id]);
 
