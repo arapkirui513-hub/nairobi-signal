@@ -6,6 +6,8 @@ import type {
 import DashboardShell from '@/components/DashboardShell';
 
 export const dynamic = 'force-dynamic';
+const ARTICLE_RECENCY_CUTOFF_ISO = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+const DEFAULT_SECTOR = 'general';
 
 type RawArticle = Article & {
   sector?: string | null;
@@ -32,8 +34,6 @@ const MOMENTUM_FALLBACK: WeeklyMomentum[] = [
 ];
 
 export default async function HomePage() {
-  const recentCutoffIso = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
-
   const [
     { data: articles,  error: articlesError  },
     { data: sectors,   error: sectorsError   },
@@ -43,7 +43,7 @@ export default async function HomePage() {
     supabase
       .from('articles')
       .select('id, title, url, summary, signal_score, sector, classification_v1, classification_v2, published_at, created_at')
-      .gte('published_at', recentCutoffIso)
+      .gte('published_at', ARTICLE_RECENCY_CUTOFF_ISO)
       .order('published_at', { ascending: false })
       .order('signal_score', { ascending: false })
       .limit(250),
@@ -71,7 +71,7 @@ export default async function HomePage() {
 
   const safeArticles: Article[] = ((articles ?? []) as RawArticle[]).map((article) => ({
     ...article,
-    sector: article.sector ?? article.classification_v2 ?? article.classification_v1 ?? 'general',
+    sector: article.sector ?? article.classification_v2 ?? article.classification_v1 ?? DEFAULT_SECTOR,
   }));
   const safeLogs: IngestionLog[]     = (logs      ?? []) as IngestionLog[];
 
