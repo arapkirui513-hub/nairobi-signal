@@ -36,9 +36,9 @@ export default function SignalFeed() {
       } else {
         throw new Error("INVALID_PAYLOAD_FORMAT");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Pipeline Failure:", err);
-      setError(err.message || "UNEXPECTED_PIPELINE_FAILURE");
+      setError(err instanceof Error ? err.message : "UNEXPECTED_PIPELINE_FAILURE");
     } finally {
       setLoading(false);
     }

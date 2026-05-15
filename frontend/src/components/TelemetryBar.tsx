@@ -1,67 +1,83 @@
 'use client';
-import { useEffect, useState } from 'react';
+
+import { useEffect, useMemo, useState } from 'react';
 
 const TICKER_ITEMS = [
-  { label: '▲ SAFARICOM +3.2%',               cls: 'ok'    },
-  { label: 'CBK SANDBOX DIRECTIVE — SIG 6.5',  cls: 'po'    },
-  { label: 'MPESA MASKED NUMBERS — SIG 7.5',   cls: 'ok'    },
-  { label: 'OATS × CLOUDWAYS — INFRA PARTNER', cls: 'infra' },
-  { label: 'KENYA ISP BLOCK MANDATE — SIG 6.5',cls: 'po'    },
-  { label: 'SAFARICOM × INDOSAT — FINTECH 7.5',cls: 'ok'    },
-  { label: 'SAFARI RALLY CONNECTIVITY — DEPLOY',cls:'infra'  },
-  { label: 'SADC ONE NETWORK — ROAMING DROP',  cls: 'po'    },
+  { label: 'CBK SANDBOX DIRECTIVE — SIG 6.5', cls: 'po' },
+  { label: 'MPESA MASKED NUMBERS — SIG 7.5', cls: 'ok' },
+  { label: 'CLOUD REGION EXPANSION — INFRA 5.8', cls: 'infra' },
+  { label: 'KENYA ISP BLOCK MANDATE — SIG 6.5', cls: 'po' },
+  { label: 'SAFARICOM × INDOSAT — FINTECH 7.5', cls: 'ok' },
+  { label: 'FIBER BACKBONE DEPLOYMENT — INFRA 6.1', cls: 'infra' },
 ];
 
 const COLOR: Record<string, string> = {
-  ok:    'var(--capital)',
-  po:    'var(--policy)',
+  ok: 'var(--capital)',
+  po: 'var(--policy)',
   infra: 'var(--infra)',
 };
 
-export default function TelemetryBar() {
+interface Props {
+  totalSignals: number;
+  highSig: number;
+  activeSources: number;
+  lastUpdatedIso: string | null;
+}
+
+function formatRelative(iso: string | null): string {
+  if (!iso) return '—';
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.max(Math.floor(diffMs / 60000), 0);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+export default function TelemetryBar({ totalSignals, highSig, activeSources, lastUpdatedIso }: Props) {
   const [clock, setClock] = useState('--:--:-- UTC');
 
   useEffect(() => {
-    const tick = () => {
+    const id = setInterval(() => {
       const n = new Date();
       const p = (x: number) => x.toString().padStart(2, '0');
       setClock(`${p(n.getUTCHours())}:${p(n.getUTCMinutes())}:${p(n.getUTCSeconds())} UTC`);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
+    }, 1000);
     return () => clearInterval(id);
   }, []);
 
-  const doubled = [...TICKER_ITEMS, ...TICKER_ITEMS];
+  const doubled = useMemo(() => [...TICKER_ITEMS, ...TICKER_ITEMS], []);
+  const relative = formatRelative(lastUpdatedIso);
 
   return (
-    <div style={{
-      height: 26, background: 'var(--s1)', borderBottom: '1px solid var(--bd)',
-      display: 'flex', alignItems: 'center', padding: '0 14px', overflow: 'hidden',
-    }}>
-      <div style={{ width: 180, height: 3, background: 'var(--bd2)', position: 'relative', marginRight: 14, flexShrink: 0 }}>
-        <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '58%', background: 'var(--capital)' }} />
-        <div style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: '32%', background: 'var(--policy)' }} />
+    <div className="terminal-bar" style={{ height: 30, display: 'flex', alignItems: 'center', padding: '0 var(--space-4)', gap: 'var(--space-4)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', minWidth: 268 }}>
+        <span className="status-dot" aria-hidden />
+        <span className="mono-label">LIVE</span>
+        <span className="mono-muted">INGESTION ACTIVE</span>
+        <span className="mono-muted" title={lastUpdatedIso ? new Date(lastUpdatedIso).toUTCString() : 'No refresh timestamp'}>
+          Last updated {relative}
+        </span>
       </div>
-      <span style={{ fontSize: 7, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text3)', flexShrink: 0 }}>
-        capital/policy
-      </span>
-      <span style={{ color: 'var(--bd2)', margin: '0 10px' }}>|</span>
-      <div style={{
-        flex: 1, overflow: 'hidden', height: 26, display: 'flex', alignItems: 'center',
-        WebkitMaskImage: 'linear-gradient(90deg, transparent, black 6%, black 92%, transparent)',
-      }}>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', whiteSpace: 'nowrap' }}>
+        <span className="metric-chip">{totalSignals} Signals</span>
+        <span className="metric-chip">{highSig} High SIG</span>
+        <span className="metric-chip">{activeSources} Active Sources</span>
+      </div>
+
+      <div style={{ flex: 1, overflow: 'hidden', height: 30, display: 'flex', alignItems: 'center', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 6%, black 92%, transparent)' }}>
         <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', animation: 'ticker 80s linear infinite' }}>
           {doubled.map((item, i) => (
-            <span key={i} style={{ color: COLOR[item.cls], padding: '0 18px', fontSize: 8 }}>
+            <span key={`${item.label}-${i}`} style={{ color: COLOR[item.cls], padding: '0 16px', fontSize: 8.5 }}>
               {item.label}
             </span>
           ))}
         </div>
       </div>
-      <span style={{ fontSize: 7.5, color: 'var(--text3)', letterSpacing: '0.8px', flexShrink: 0, marginLeft: 12 }}>
-        {clock}
-      </span>
+
+      <span className="mono-muted" style={{ flexShrink: 0 }}>{clock}</span>
     </div>
   );
 }
