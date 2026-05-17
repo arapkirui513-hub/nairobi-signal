@@ -6,6 +6,15 @@ import type {
 import DashboardShell from '@/components/DashboardShell';
 
 export const dynamic = 'force-dynamic';
+const RECENCY_DAYS = 14;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const DEFAULT_SECTOR = 'general';
+
+type RawArticle = Article & {
+  sector?: string | null;
+  classification_v1?: string | null;
+  classification_v2?: string | null;
+};
 
 const SECTOR_FALLBACK: SectorStat[] = [
   { name: 'FINTECH', pct: 41, z_score:  1.4 },
@@ -26,6 +35,8 @@ const MOMENTUM_FALLBACK: WeeklyMomentum[] = [
 ];
 
 export default async function HomePage() {
+  const articleRecencyCutoffIso = new Date(new Date().getTime() - RECENCY_DAYS * MS_PER_DAY).toISOString();
+
   const [
     { data: articles,  error: articlesError  },
     { data: sectors,   error: sectorsError   },
@@ -34,8 +45,10 @@ export default async function HomePage() {
   ] = await Promise.all([
     supabase
       .from('articles')
-      .select('id, title, url, summary, signal_score, sector, published_at, created_at')
+      .select('id, title, url, summary, signal_score, sector, classification_v1, classification_v2, published_at, created_at')
+      .gte('published_at', articleRecencyCutoffIso)
       .order('signal_score', { ascending: false })
+      .order('published_at', { ascending: false })
       .limit(250),
 
     supabase
@@ -59,7 +72,10 @@ export default async function HomePage() {
   if (momentumError)  console.error('momentum:',  momentumError.message);
   if (logsError)      console.error('logs:',      logsError.message);
 
-  const safeArticles: Article[]      = (articles  ?? []) as Article[];
+  const safeArticles: Article[] = ((articles ?? []) as RawArticle[]).map((article) => ({
+    ...article,
+    sector: article.sector ?? article.classification_v2 ?? article.classification_v1 ?? DEFAULT_SECTOR,
+  }));
   const safeLogs: IngestionLog[]     = (logs      ?? []) as IngestionLog[];
 
   const safeSectors: SectorStat[] = sectors && sectors.length > 0
